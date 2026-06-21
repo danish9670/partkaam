@@ -25,3 +25,4 @@ dist-ssr
 
 #Claude skills (not needed in repository)
 .claude/
+package-lock.json
