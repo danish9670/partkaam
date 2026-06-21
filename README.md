@@ -1,73 +1,34 @@
-# React + TypeScript + Vite
+# PartKaam 🧳
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Flexible part-time jobs for college students across India
 
-Currently, two official plugins are available:
+A full-stack web application connecting Indian college students with employers offering part-time job opportunities.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Live Demo
+Coming soon — deploying on Cloudflare Pages
 
-## React Compiler
+## ⚡ Tech Stack
+- **Frontend:** React + Vite + TypeScript + Tailwind CSS
+- **Backend:** Cloudflare Workers + Hono (coming soon)
+- **Database:** Cloudflare D1 (SQL)
+- **Cache:** Cloudflare KV
+- **Storage:** Cloudflare R2
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Features
+- 🔍 Debounced job search with real-time filtering
+- 💀 Skeleton loading states
+- 🛡️ Error handling with retry
+- 🔐 Private chat (student ↔ employer only)
+- 💰 Salary tracker with payment history
+- 📱 Fully responsive (mobile + desktop)
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🏃 Run Locally
+```bash
+git clone https://github.com/danish9670/partkaam.git
+cd partkaam
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 👨‍💻 Author
+Danish Raza — [@danish9670](https://github.com/danish9670)
