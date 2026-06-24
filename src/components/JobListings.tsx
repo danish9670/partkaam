@@ -3,71 +3,7 @@ import JobCard, { type Job } from './JobCard'
 import JobCardSkeleton from './JobCardSkeleton'
 import FilterSidebar, { type Filters } from './FilterSidebar'
 
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Online Maths Tutor',
-    company: 'BrightMinds EdTech',
-    location: 'Bangalore',
-    payAmount: '₹300/hr',
-    payLabel: 'Hourly',
-    jobType: 'Remote',
-    tags: ['Class 9–12', 'Weekend ok'],
-    hoursInfo: '8–12 hrs/week',
-    postedInfo: 'Posted 2 days ago',
-    isNew: true,
-  },
-  {
-    id: '2',
-    title: 'Content Writer — Social Media',
-    company: 'GrowthHive Agency',
-    location: 'Mumbai',
-    payAmount: '₹8,000/mo',
-    payLabel: 'Stipend',
-    jobType: 'Remote',
-    tags: ['Internship', 'Instagram · LinkedIn'],
-    hoursInfo: '15 hrs/week',
-    postedInfo: 'Posted today',
-  },
-  {
-    id: '3',
-    title: 'Food Delivery Partner',
-    company: 'QuickBite',
-    location: 'Delhi NCR',
-    payAmount: '₹180/hr',
-    payLabel: '+ tips',
-    jobType: 'On-site',
-    tags: ['2-wheeler needed'],
-    hoursInfo: 'Choose your shifts',
-    postedInfo: 'Posted today',
-    isNew: true,
-  },
-  {
-    id: '4',
-    title: 'Data Entry Operator',
-    company: 'InfoTech Solutions',
-    location: 'Hyderabad',
-    payAmount: '₹150/hr',
-    payLabel: 'Hourly',
-    jobType: 'Remote',
-    tags: ['MS Excel', 'Typing speed 40wpm'],
-    hoursInfo: '10–15 hrs/week',
-    postedInfo: 'Posted 3 days ago',
-  },
-  {
-    id: '5',
-    title: 'Graphic Design Intern',
-    company: 'CreativeBox Studio',
-    location: 'Pune',
-    payAmount: '₹6,000/mo',
-    payLabel: 'Stipend',
-    jobType: 'Hybrid',
-    tags: ['Canva', 'Figma', 'Internship'],
-    hoursInfo: '20 hrs/week',
-    postedInfo: 'Posted 1 day ago',
-    isNew: true,
-  },
-]
+const API_URL = 'http://127.0.0.1:8787'
 
 const defaultFilters: Filters = {
   jobType: { remote: false, onsite: false, hybrid: false },
@@ -81,67 +17,85 @@ interface JobListingsProps {
   city: string
 }
 
+interface ApiJob {
+  id: string
+  title: string
+  employer_id: string
+  description: string
+  category: string
+  job_type: 'remote' | 'on-site' | 'hybrid'
+  city: string
+  pay_amount: number
+  pay_type: string
+  hours_per_week: number
+  status: string
+  created_at: string
+}
+
+function mapApiJobToJob(apiJob: ApiJob): Job {
+  return {
+    id: apiJob.id,
+    title: apiJob.title,
+    company: apiJob.employer_id,
+    location: apiJob.city,
+    payAmount: apiJob.pay_type === 'hourly'
+      ? `₹${apiJob.pay_amount}/hr`
+      : apiJob.pay_type === 'monthly'
+      ? `₹${apiJob.pay_amount}/mo`
+      : `₹${apiJob.pay_amount}`,
+    payLabel: apiJob.pay_type,
+    jobType: apiJob.job_type === 'remote'
+      ? 'Remote'
+      : apiJob.job_type === 'on-site'
+      ? 'On-site'
+      : 'Hybrid',
+    tags: [apiJob.category],
+    hoursInfo: `${apiJob.hours_per_week} hrs/week`,
+    postedInfo: `Posted ${new Date(apiJob.created_at).toLocaleDateString('en-IN')}`,
+  }
+}
+
 function JobListings({ keyword, city }: JobListingsProps) {
-  const [allJobs, setAllJobs] = useState<Job[]>([])
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(defaultFilters)
 
-  const loadJobs = () => {
+  const fetchJobs = async () => {
     setIsLoading(true)
     setError(null)
-    setTimeout(() => {
-      try {
-        setAllJobs(mockJobs)
-        setFilteredJobs(mockJobs)
-        setIsLoading(false)
-      } catch {
-        setError('Failed to load jobs. Please try again.')
-        setIsLoading(false)
-      }
-    }, 800)
+
+    try {
+      const params = new URLSearchParams()
+      if (keyword) params.append('keyword', keyword)
+      if (city && city !== 'All of India') params.append('city', city)
+
+      const res = await fetch(`${API_URL}/api/jobs?${params.toString()}`)
+      const data = await res.json() as { success: boolean; jobs: ApiJob[] }
+
+      if (!data.success) throw new Error('Failed to fetch')
+
+      setJobs(data.jobs.map(mapApiJobToJob))
+    } catch {
+      setError('Failed to load jobs. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
-    loadJobs()
-  }, [])
+    fetchJobs()
+  }, [keyword, city])
 
-  // Filter jobs whenever keyword, city or filters change
-  useEffect(() => {
-    let result = allJobs
-
-    // Keyword filter
-    if (keyword.trim()) {
-      const kw = keyword.toLowerCase()
-      result = result.filter(
-        (job) =>
-          job.title.toLowerCase().includes(kw) ||
-          job.company.toLowerCase().includes(kw) ||
-          job.tags.some((t) => t.toLowerCase().includes(kw))
-      )
-    }
-
-    // City filter
-    if (city && city !== 'All of India') {
-      result = result.filter((job) =>
-        job.location.toLowerCase().includes(city.toLowerCase())
-      )
-    }
-
-    // Job type filter
+  // Client-side job type filter
+  const filteredJobs = jobs.filter((job) => {
     const { remote, onsite, hybrid } = filters.jobType
-    if (remote || onsite || hybrid) {
-      result = result.filter((job) => {
-        if (remote && job.jobType === 'Remote') return true
-        if (onsite && job.jobType === 'On-site') return true
-        if (hybrid && job.jobType === 'Hybrid') return true
-        return false
-      })
-    }
-
-    setFilteredJobs(result)
-  }, [keyword, city, filters, allJobs])
+    if (!remote && !onsite && !hybrid) return true
+    if (remote && job.jobType === 'Remote') return true
+    if (onsite && job.jobType === 'On-site') return true
+    if (hybrid && job.jobType === 'Hybrid') return true
+    return false
+  })
 
   const handleApply = (jobId: string) => {
     console.log('Applying to job:', jobId)
@@ -152,7 +106,7 @@ function JobListings({ keyword, city }: JobListingsProps) {
       <div className="max-w-6xl mx-auto px-4 py-10 text-center">
         <p className="text-sm text-red-700 mb-3">{error}</p>
         <button
-          onClick={loadJobs}
+          onClick={fetchJobs}
           className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-md cursor-pointer"
         >
           Retry
@@ -164,13 +118,9 @@ function JobListings({ keyword, city }: JobListingsProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4">
-
-        {/* Filters Sidebar */}
         <div className="hidden md:block">
           <FilterSidebar filters={filters} onChange={setFilters} />
         </div>
-
-        {/* Job Cards */}
         <div>
           <h2 className="text-base font-medium text-gray-900 mb-4">
             {isLoading
@@ -179,7 +129,6 @@ function JobListings({ keyword, city }: JobListingsProps) {
               ? 'No jobs found'
               : `${filteredJobs.length} job${filteredJobs.length > 1 ? 's' : ''} found`}
           </h2>
-
           <div className="flex flex-col gap-3">
             {isLoading ? (
               Array.from({ length: 3 }).map((_, i) => <JobCardSkeleton key={i} />)
